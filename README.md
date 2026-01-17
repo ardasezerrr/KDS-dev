@@ -1,4 +1,4 @@
-# ☀️ Yaz 2026 Strateji Merkezi
+# Yaz 2026 Strateji Merkezi
 
 **İzmir E-Ticaret Karar Destek Sistemi (KDS)**
 
@@ -6,7 +6,7 @@ Yaz mevsimi için kar marjınızı artırmak ve stratejik kararlar almak için t
 
 ---
 
-## 🎯 Ne İşe Yarar?
+## Ne İşe Yarar?
 
 Bu sistem size şu soruların cevabını verir:
 
@@ -17,7 +17,7 @@ Bu sistem size şu soruların cevabını verir:
 
 ---
 
-## 🚀 Hızlı Başlangıç
+## Hızlı Başlangıç
 
 ### 1. Gereksinimler
 - Node.js (v14+)
@@ -41,10 +41,10 @@ Tarayıcıda açın: **http://localhost:3000**
 
 ---
 
-## 📊 Özellikler
+## Özellikler
 
 ### 1. Genel Bakış Sayfası
-- **💡 Ne Yapmalısınız?** - Anında aksiyon önerileri
+- **Ne Yapmalısınız?** - Anında aksiyon önerileri
 - **Hedef Kar Marjı Ayarı** - Slider ile hedefinizi belirleyin
 - **Özet Kartları** - Mevcut durum bir bakışta
 - **Grafikler** - Ürün kar marjları ve durum dağılımı
@@ -67,7 +67,7 @@ Tarayıcıda açın: **http://localhost:3000**
 
 ---
 
-## 🎚️ Hedef Kar Marjı Nasıl Çalışır?
+## Hedef Kar Marjı Nasıl Çalışır?
 
 1. **Slider'ı hareket ettirin** (örn: %50)
 2. Sistem otomatik hesaplar:
@@ -77,7 +77,7 @@ Tarayıcıda açın: **http://localhost:3000**
 
 ---
 
-## 📁 Proje Yapısı
+## Proje Yapısı
 
 ```
 kds/
@@ -94,7 +94,7 @@ kds/
 
 ---
 
-## 🔌 API Endpoint'leri
+## API Endpoint'leri
 
 | Endpoint | Açıklama |
 |----------|----------|
