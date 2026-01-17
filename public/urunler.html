@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün Yönetimi - KDS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .actions {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Ürün Yönetimi</h1>
+            <a href="index.html" class="btn">← Ana Sayfa</a>
+        </header>
+
+        <div class="content">
+            <div class="actions">
+                <button class="btn btn-success" onclick="openAddModal()">+ Yeni Ürün Ekle</button>
+            </div>
+
+            <div id="loading">Yükleniyor...</div>
+            <table id="urunlerTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ürün Adı</th>
+                        <th>Kategori</th>
+                        <th>Birim Maliyet</th>
+                        <th>Satış Fiyatı</th>
+                        <th>Kar Marjı %</th>
+                        <th>Stok</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="urunlerBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ürün Ekleme/Düzenleme Modal -->
+    <div id="urunModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Yeni Ürün Ekle</h2>
+            <form id="urunForm">
+                <input type="hidden" id="urunId">
+                
+                <div class="form-group">
+                    <label>Ürün Adı</label>
+                    <input type="text" id="urunAdi" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="kategoriId" required></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Birim Maliyet (₺)</label>
+                    <input type="number" id="birimMaliyet" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Satış Fiyatı (₺)</label>
+                    <input type="number" id="satisFiyati" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Stok Miktarı</label>
+                    <input type="number" id="stokMiktari" value="0" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">İptal</button>
+                    <button type="submit" class="btn btn-success">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', () => {
+            loadKategoriler();
+            loadUrunler();
+        });
+
+        // Kategorileri yükle
+        async function loadKategoriler() {
+            try {
+                const response = await fetch(`${API_URL}/kategoriler`);
+                const result = await response.json();
+                const select = document.getElementById('kategoriId');
+                select.innerHTML = '<option value="">Seçiniz...</option>';
+                result.data.forEach(kategori => {
+                    const option = document.createElement('option');
+                    option.value = kategori.kategori_id;
+                    option.textContent = kategori.kategori_adi;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Kategori yükleme hatası:', error);
+            }
+        }
+
+        // Ürünleri yükle
+        async function loadUrunler() {
+            try {
+                const response = await fetch(`${API_URL}/urunler`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tbody = document.getElementById('urunlerBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.forEach(urun => {
+                        const karMarji = ((urun.satis_fiyati - urun.birim_maliyet) / urun.satis_fiyati * 100).toFixed(2);
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${urun.urun_id}</td>
+                            <td>${urun.urun_adi}</td>
+                            <td>${urun.kategori_adi || '-'}</td>
+                            <td>${urun.birim_maliyet.toFixed(2)} ₺</td>
+                            <td>${urun.satis_fiyati.toFixed(2)} ₺</td>
+                            <td><span class="badge ${karMarji > 50 ? 'badge-success' : 'badge-warning'}">${karMarji}%</span></td>
+                            <td>${urun.stok_miktari}</td>
+                            <td>
+                                <button class="btn" onclick="editUrun(${urun.urun_id})">Düzenle</button>
+                                <button class="btn btn-danger" onclick="deleteUrun(${urun.urun_id})">Sil</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('urunlerTable').style.display = 'table';
+                }
+            } catch (error) {
+                console.error('Ürün yükleme hatası:', error);
+                document.getElementById('loading').textContent = 'Hata: ' + error.message;
+            }
+        }
+
+        // Modal aç
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Yeni Ürün Ekle';
+            document.getElementById('urunForm').reset();
+            document.getElementById('urunId').value = '';
+            document.getElementById('urunModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('urunModal').style.display = 'none';
+        }
+
+        // Ürün düzenle
+        async function editUrun(id) {
+            try {
+                const response = await fetch(`${API_URL}/urunler/${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const urun = result.data;
+                    document.getElementById('modalTitle').textContent = 'Ürün Düzenle';
+                    document.getElementById('urunId').value = urun.urun_id;
+                    document.getElementById('urunAdi').value = urun.urun_adi;
+                    document.getElementById('kategoriId').value = urun.kategori_id;
+                    document.getElementById('birimMaliyet').value = urun.birim_maliyet;
+                    document.getElementById('satisFiyati').value = urun.satis_fiyati;
+                    document.getElementById('stokMiktari').value = urun.stok_miktari;
+                    document.getElementById('urunModal').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Ürün yükleme hatası: ' + error.message);
+            }
+        }
+
+        // Ürün sil
+        async function deleteUrun(id) {
+            if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/urunler/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Ürün başarıyla silindi');
+                    loadUrunler();
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('Silme hatası: ' + error.message);
+            }
+        }
+
+        // Form gönder
+        document.getElementById('urunForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const urunId = document.getElementById('urunId').value;
+            const data = {
+                urun_adi: document.getElementById('urunAdi').value,
+                kategori_id: parseInt(document.getElementById('kategoriId').value),
+                birim_maliyet: parseFloat(document.getElementById('birimMaliyet').value),
+                satis_fiyati: parseFloat(document.getElementById('satisFiyati').value),
+                stok_miktari: parseInt(document.getElementById('stokMiktari').value)
+            };
+
+            try {
+                let response;
+                if (urunId) {
+                    // Güncelle
+                    response = await fetch(`${API_URL}/urunler/${urunId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Ekle
+                    response = await fetch(`${API_URL}/urunler`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(urunId ? 'Ürün güncellendi' : 'Ürün eklendi');
+                    closeModal();
+                    loadUrunler();
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('İşlem hatası: ' + error.message);
+            }
+        });
+
+        // Modal dışına tıklayınca kapat
+        window.onclick = function(event) {
+            const modal = document.getElementById('urunModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

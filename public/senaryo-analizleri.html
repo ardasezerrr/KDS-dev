@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senaryo Analizleri - KDS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .actions {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔮 Senaryo Analizleri</h1>
+            <a href="index.html" class="btn">← Ana Sayfa</a>
+        </header>
+
+        <div class="content">
+            <div class="info-box">
+                <strong>KDS Özelliği:</strong> Senaryo analizleri geleceği planlamaya yöneliktir. 
+                Yarı-yapısal ve yapısal olmayan kararlarda kullanılır. Değişen şartlara uyum sağlayabilecek esnekliktedir.
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" onclick="openAddModal()">+ Yeni Senaryo Ekle</button>
+            </div>
+
+            <div id="loading">Yükleniyor...</div>
+            <table id="senaryoTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ürün</th>
+                        <th>Senaryo Adı</th>
+                        <th>Beklenen Maliyet Artışı %</th>
+                        <th>Tahmini Kar Etkisi</th>
+                    </tr>
+                </thead>
+                <tbody id="senaryoBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Senaryo Ekleme Modal -->
+    <div id="senaryoModal" class="modal">
+        <div class="modal-content">
+            <h2>Yeni Senaryo Analizi Ekle</h2>
+            <form id="senaryoForm">
+                <div class="form-group">
+                    <label>Ürün</label>
+                    <select id="urunId" required></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Senaryo Adı</label>
+                    <input type="text" id="senaryoAdi" required placeholder="Örn: Dolar 40 TL Olursa">
+                </div>
+
+                <div class="form-group">
+                    <label>Beklenen Maliyet Artışı (%)</label>
+                    <input type="number" id="beklenenMaliyetArtisi" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Tahmini Kar Etkisi (₺)</label>
+                    <input type="number" id="tahminiKarEtkisi" step="0.01" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">İptal</button>
+                    <button type="submit" class="btn btn-success">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUrunler();
+            loadSenaryolar();
+        });
+
+        async function loadUrunler() {
+            try {
+                const response = await fetch(`${API_URL}/urunler`);
+                const result = await response.json();
+                const select = document.getElementById('urunId');
+                select.innerHTML = '<option value="">Seçiniz...</option>';
+                result.data.forEach(urun => {
+                    const option = document.createElement('option');
+                    option.value = urun.urun_id;
+                    option.textContent = urun.urun_adi;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ürün yükleme hatası:', error);
+            }
+        }
+
+        async function loadSenaryolar() {
+            try {
+                const response = await fetch(`${API_URL}/senaryoanalizleri`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tbody = document.getElementById('senaryoBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.forEach(senaryo => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${senaryo.senaryo_id}</td>
+                            <td>${senaryo.urun_adi || '-'}</td>
+                            <td><strong>${senaryo.senaryo_adi}</strong></td>
+                            <td>${senaryo.beklenen_maliyet_artisi}%</td>
+                            <td><span class="badge badge-danger">${senaryo.tahmini_kar_etkisi} ₺</span></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('senaryoTable').style.display = 'table';
+                }
+            } catch (error) {
+                console.error('Senaryo yükleme hatası:', error);
+                document.getElementById('loading').textContent = 'Hata: ' + error.message;
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('senaryoForm').reset();
+            document.getElementById('senaryoModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('senaryoModal').style.display = 'none';
+        }
+
+        document.getElementById('senaryoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                urun_id: parseInt(document.getElementById('urunId').value),
+                senaryo_adi: document.getElementById('senaryoAdi').value,
+                beklenen_maliyet_artisi: parseFloat(document.getElementById('beklenenMaliyetArtisi').value),
+                tahmini_kar_etkisi: parseFloat(document.getElementById('tahminiKarEtkisi').value)
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/senaryoanalizleri`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Senaryo analizi eklendi');
+                    closeModal();
+                    loadSenaryolar();
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('İşlem hatası: ' + error.message);
+            }
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('senaryoModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kar Marjı Risk Analizi - KDS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .btn-analyze {
+            background: #28a745;
+            padding: 12px 30px;
+            font-size: 1.1em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #dc3545;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Kar Marjı Risk Analizi</h1>
+            <a href="index.html" class="btn">← Ana Sayfa</a>
+        </header>
+
+        <div class="content">
+            <div class="info-box">
+                <strong>KDS Özelliği:</strong> Bu analiz, belirlenen alt limitin altında kalan kar marjlarına sahip ürünleri tespit eder. 
+                Yarı-yapısal kararlar için analitik model kullanır ve karar vericinin yerine geçmekten ziyade ona yardımcı olur.
+            </div>
+
+            <div class="form-section">
+                <h2>Analiz Parametreleri</h2>
+                <div class="form-group">
+                    <label>Alt Limit Kar Marjı (%)</label>
+                    <input type="number" id="altLimit" step="0.01" value="50" placeholder="Örn: 50">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Bu değerin altında kar marjına sahip ürünler riskli olarak işaretlenecektir.
+                    </small>
+                </div>
+                <button class="btn btn-analyze" onclick="runAnalysis()">🔍 Analiz Yap</button>
+            </div>
+
+            <div id="results" style="display: none;">
+                <h2>Risk Analizi Sonuçları</h2>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Ürün Adı</th>
+                            <th>Birim Maliyet</th>
+                            <th>Satış Fiyatı</th>
+                            <th>Kar Marjı %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+
+            <div id="noResults" style="display: none; text-align: center; padding: 40px; color: #28a745;">
+                <h2>✅ Harika!</h2>
+                <p style="font-size: 1.2em; margin-top: 10px;">Belirlediğiniz alt limitin altında kar marjına sahip ürün bulunmamaktadır.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        async function runAnalysis() {
+            const altLimit = parseFloat(document.getElementById('altLimit').value);
+            
+            if (!altLimit || altLimit < 0 || altLimit > 100) {
+                alert('Lütfen geçerli bir alt limit değeri girin (0-100 arası)');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/analiz/kar-marji-risk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ alt_limit_yuzde: altLimit })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    
+                    if (data.length === 0) {
+                        document.getElementById('results').style.display = 'none';
+                        document.getElementById('noResults').style.display = 'block';
+                    } else {
+                        document.getElementById('noResults').style.display = 'none';
+                        document.getElementById('results').style.display = 'block';
+                        
+                        const tbody = document.getElementById('resultsBody');
+                        tbody.innerHTML = '';
+                        
+                        data.forEach(urun => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><strong>${urun.urun_adi}</strong></td>
+                                <td>${urun.birim_maliyet.toFixed(2)} ₺</td>
+                                <td>${urun.satis_fiyati.toFixed(2)} ₺</td>
+                                <td><span class="badge badge-danger">${urun.kar_marji_yuzde}%</span></td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+                } else {
+                    alert('Analiz hatası: ' + result.error);
+                }
+            } catch (error) {
+                alert('Hata: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

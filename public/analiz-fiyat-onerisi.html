@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kar Odaklı Fiyat Önerisi - KDS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .btn-analyze {
+            background: #28a745;
+            padding: 12px 30px;
+            font-size: 1.1em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Kar Odaklı Fiyat Önerisi</h1>
+            <a href="index.html" class="btn">← Ana Sayfa</a>
+        </header>
+
+        <div class="content">
+            <div class="info-box">
+                <strong>KDS Özelliği:</strong> Bu analiz, hedef kar marjına ulaşmak için ideal satış fiyatlarını hesaplar. 
+                Karar vericinin yerine geçmekten ziyade ona yardımcı olur. Kullanıcı kontrolü altındadır ve analitik model kullanır.
+            </div>
+
+            <div class="form-section">
+                <h2>Analiz Parametreleri</h2>
+                <div class="form-group">
+                    <label>Hedef Kar Marjı (%)</label>
+                    <input type="number" id="hedefMarj" step="0.01" value="55" placeholder="Örn: 55">
+                    <small style="color: #666; display: block; margin-top: 5px;">
+                        Tüm ürünler için hedef kar marjı. Sistem bu marja ulaşmak için önerilen fiyatları hesaplayacaktır.
+                    </small>
+                </div>
+                <button class="btn btn-analyze" onclick="runAnalysis()">💡 Fiyat Önerilerini Hesapla</button>
+            </div>
+
+            <div id="results" style="display: none;">
+                <h2>Fiyat Önerileri</h2>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Ürün Adı</th>
+                            <th>Mevcut Maliyet</th>
+                            <th>Şu Anki Fiyat</th>
+                            <th>Önerilen Fiyat</th>
+                            <th>Yapılması Gereken Zam</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        async function runAnalysis() {
+            const hedefMarj = parseFloat(document.getElementById('hedefMarj').value);
+            
+            if (!hedefMarj || hedefMarj < 0 || hedefMarj >= 100) {
+                alert('Lütfen geçerli bir hedef kar marjı değeri girin (0-100 arası)');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/analiz/kar-odakli-fiyat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hedef_marj_yuzde: hedefMarj })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    
+                    document.getElementById('results').style.display = 'block';
+                    
+                    const tbody = document.getElementById('resultsBody');
+                    tbody.innerHTML = '';
+                    
+                    data.forEach(urun => {
+                        const zam = urun.yapilmasi_gereken_zam;
+                        const zamBadge = zam > 0 
+                            ? `<span class="badge badge-warning">+${zam.toFixed(2)} ₺</span>`
+                            : zam < 0
+                            ? `<span class="badge badge-success">${zam.toFixed(2)} ₺</span>`
+                            : `<span class="badge badge-info">Değişiklik yok</span>`;
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${urun.urun_adi}</strong></td>
+                            <td>${urun.mevcut_maliyet.toFixed(2)} ₺</td>
+                            <td>${urun.su_anki_fiyat.toFixed(2)} ₺</td>
+                            <td><strong style="color: #667eea;">${urun.onerilen_satis_fiyati.toFixed(2)} ₺</strong></td>
+                            <td>${zamBadge}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    alert('Analiz hatası: ' + result.error);
+                }
+            } catch (error) {
+                alert('Hata: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

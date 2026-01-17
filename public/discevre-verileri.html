@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dış Çevre Verileri - KDS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .actions {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Dış Çevre Verileri</h1>
+            <a href="index.html" class="btn">← Ana Sayfa</a>
+        </header>
+
+        <div class="content">
+            <div class="info-box">
+                <strong>KDS Özelliği:</strong> Dış çevre verileri (dolar kuru, endeksler vb.) sistemin esnekliğini sağlar. 
+                Değişen şartlara uyum sağlayabilecek şekilde güncellenebilir. Veri ve model tabanlarına erişimlidir.
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-success" onclick="openAddModal()">+ Yeni Veri Ekle</button>
+            </div>
+
+            <div id="loading">Yükleniyor...</div>
+            <table id="verilerTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Parametre Adı</th>
+                        <th>Değer</th>
+                        <th>Kayıt Tarihi</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="verilerBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Veri Ekleme/Düzenleme Modal -->
+    <div id="veriModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Yeni Dış Çevre Verisi Ekle</h2>
+            <form id="veriForm">
+                <input type="hidden" id="veriId">
+                
+                <div class="form-group">
+                    <label>Parametre Adı</label>
+                    <input type="text" id="parametreAdi" required placeholder="Örn: Dolar Kuru, Pamuk Endeksi">
+                </div>
+
+                <div class="form-group">
+                    <label>Değer</label>
+                    <input type="number" id="deger" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Kayıt Tarihi</label>
+                    <input type="date" id="kayitTarihi" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">İptal</button>
+                    <button type="submit" class="btn btn-success">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVeriler();
+            // Bugünün tarihini varsayılan olarak ayarla
+            document.getElementById('kayitTarihi').value = new Date().toISOString().split('T')[0];
+        });
+
+        async function loadVeriler() {
+            try {
+                const response = await fetch(`${API_URL}/discevreverileri`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tbody = document.getElementById('verilerBody');
+                    tbody.innerHTML = '';
+                    
+                    result.data.forEach(veri => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${veri.veri_id}</td>
+                            <td><strong>${veri.parametre_adi}</strong></td>
+                            <td>${veri.deger}</td>
+                            <td>${veri.kayit_tarihi}</td>
+                            <td>
+                                <button class="btn" onclick="editVeri(${veri.veri_id})">Düzenle</button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('verilerTable').style.display = 'table';
+                }
+            } catch (error) {
+                console.error('Veri yükleme hatası:', error);
+                document.getElementById('loading').textContent = 'Hata: ' + error.message;
+            }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Yeni Dış Çevre Verisi Ekle';
+            document.getElementById('veriForm').reset();
+            document.getElementById('veriId').value = '';
+            document.getElementById('kayitTarihi').value = new Date().toISOString().split('T')[0];
+            document.getElementById('veriModal').style.display = 'block';
+        }
+
+        async function editVeri(id) {
+            try {
+                const response = await fetch(`${API_URL}/discevreverileri`);
+                const result = await response.json();
+                const veri = result.data.find(v => v.veri_id == id);
+                
+                if (veri) {
+                    document.getElementById('modalTitle').textContent = 'Dış Çevre Verisi Düzenle';
+                    document.getElementById('veriId').value = veri.veri_id;
+                    document.getElementById('parametreAdi').value = veri.parametre_adi;
+                    document.getElementById('deger').value = veri.deger;
+                    document.getElementById('kayitTarihi').value = veri.kayit_tarihi;
+                    document.getElementById('veriModal').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Veri yükleme hatası: ' + error.message);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('veriModal').style.display = 'none';
+        }
+
+        document.getElementById('veriForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const veriId = document.getElementById('veriId').value;
+            const data = {
+                parametre_adi: document.getElementById('parametreAdi').value,
+                deger: parseFloat(document.getElementById('deger').value),
+                kayit_tarihi: document.getElementById('kayitTarihi').value
+            };
+
+            try {
+                let response;
+                if (veriId) {
+                    // Güncelle
+                    response = await fetch(`${API_URL}/discevreverileri/${veriId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Ekle
+                    response = await fetch(`${API_URL}/discevreverileri`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(veriId ? 'Veri güncellendi' : 'Veri eklendi');
+                    closeModal();
+                    loadVeriler();
+                } else {
+                    alert('Hata: ' + result.error);
+                }
+            } catch (error) {
+                alert('İşlem hatası: ' + error.message);
+            }
+        });
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('veriModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

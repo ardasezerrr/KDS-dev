@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sezonluk Stok Bütçe Analizi - KDS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-analyze {
+            background: #28a745;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-item h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .summary-item p {
+            opacity: 0.9;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Sezonluk Stok Bütçe Analizi</h1>
+            <a href="index.html" class="btn">← Ana Sayfa</a>
+        </header>
+
+        <div class="content">
+            <div class="info-box">
+                <strong>KDS Özelliği:</strong> Bu analiz, kategori bazında stok maliyetlerini ve beklenen karları hesaplar. 
+                Geleceği planlamaya yöneliktir ve stratejik düzeydeki yöneticiler için karar verme desteği sağlar.
+            </div>
+
+            <button class="btn btn-analyze" onclick="runAnalysis()">📊 Analiz Yap</button>
+
+            <div id="summary" style="display: none;" class="summary-card">
+                <div class="summary-item">
+                    <h3 id="totalStok">0</h3>
+                    <p>Toplam Stok Adedi</p>
+                </div>
+                <div class="summary-item">
+                    <h3 id="totalMaliyet">0 ₺</h3>
+                    <p>Toplam Stok Maliyeti</p>
+                </div>
+                <div class="summary-item">
+                    <h3 id="totalKar">0 ₺</h3>
+                    <p>Beklenen Toplam Kar</p>
+                </div>
+            </div>
+
+            <div id="results" style="display: none;">
+                <h2>Kategori Bazında Analiz</h2>
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Kategori</th>
+                            <th>Toplam Stok Adedi</th>
+                            <th>Toplam Stok Maliyeti</th>
+                            <th>Beklenen Toplam Kar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        async function runAnalysis() {
+            try {
+                const response = await fetch(`${API_URL}/analiz/sezonluk-stok-butce`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    
+                    // Özet hesaplamaları
+                    let totalStok = 0;
+                    let totalMaliyet = 0;
+                    let totalKar = 0;
+                    
+                    data.forEach(item => {
+                        totalStok += parseInt(item.toplam_stok_adedi) || 0;
+                        totalMaliyet += parseFloat(item.toplam_stok_maliyeti) || 0;
+                        totalKar += parseFloat(item.beklenen_toplam_kar) || 0;
+                    });
+                    
+                    // Özet göster
+                    document.getElementById('totalStok').textContent = totalStok.toLocaleString('tr-TR');
+                    document.getElementById('totalMaliyet').textContent = totalMaliyet.toFixed(2) + ' ₺';
+                    document.getElementById('totalKar').textContent = totalKar.toFixed(2) + ' ₺';
+                    document.getElementById('summary').style.display = 'grid';
+                    
+                    // Tablo göster
+                    document.getElementById('results').style.display = 'block';
+                    
+                    const tbody = document.getElementById('resultsBody');
+                    tbody.innerHTML = '';
+                    
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><strong>${item.kategori_adi}</strong></td>
+                            <td>${parseInt(item.toplam_stok_adedi || 0).toLocaleString('tr-TR')}</td>
+                            <td>${parseFloat(item.toplam_stok_maliyeti || 0).toFixed(2)} ₺</td>
+                            <td><strong style="color: #28a745;">${parseFloat(item.beklenen_toplam_kar || 0).toFixed(2)} ₺</strong></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    alert('Analiz hatası: ' + result.error);
+                }
+            } catch (error) {
+                alert('Hata: ' + error.message);
+            }
+        }
+
+        // Sayfa yüklendiğinde otomatik analiz
+        document.addEventListener('DOMContentLoaded', () => {
+            runAnalysis();
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
