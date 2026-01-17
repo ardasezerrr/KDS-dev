@@ -109,19 +109,4 @@ kds/
 
 ---
 
-## 💡 Kullanım İpuçları
-
-1. **Her gün** hedef kar marjınızı kontrol edin
-2. **Dolar kuru değiştiğinde** simülasyon yapın
-3. **Riskli ürünlerde** hemen aksiyon alın
-4. **Rakip fiyatlarını** düzenli güncelleyin
-
----
-
-## 📞 Destek
-
-Sorularınız için: [E-posta adresiniz]
-
----
-
 **© 2024 İzmir E-Ticaret | Karar Destek Sistemi**
